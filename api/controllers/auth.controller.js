@@ -1,6 +1,7 @@
 import User from "../models/user.model.js";
 import createError from "../utils/createError.js";
 import bcrypt from 'bcrypt'
+import randToken from 'rand-token'
 
 export const register = async (req, res, next) => {
   try {
@@ -12,42 +13,42 @@ export const register = async (req, res, next) => {
     await newUser.save()
     res.status(201).send("User has been created.");
   } catch (error) {
-    next(err);
+    next(error);
   }
 }
 
-export const generateAccessToken = (user) => {
+export const generateToken = (user) => {
   return jwt.sign(
     {
       id: user._id,
-      isSeller: user.isSeller,
+      username: user.username,
     },
-    process.env.JWT_ACCESS_KEY,
-    { expiresIn: '120s' }
+    process.env.ACCESS_TOKEN_SECRET,
+    { expiresIn: process.env.ACCESS_TOKEN_LIFE }
   )
 }
 
-export const generateRefreshToken = (user) => {
-  return jwt.sign(
-    {
-      id: user._id,
-      isSeller: user.isSeller,
-    },
-    process.env.JWT_REFRESH_KEY,
-    { expiresIn: '365d' }
-  )
+export const updateRefreshToken = async (userId, refreshToken) => {
+  const user = await User.findOne({_id: userId})
+  user.refreshToken = refreshToken
+  user.save();
 }
 
 export const login = async (req, res, next) => {
   try {
-    const user = await User.findOne({ userName: req.body.userName })
+    const user = await User.findOne({ username: req.body.username })
     if (!user) return next(createError(404, 'user not found'))
     const isCorrectPass = bcrypt.compareSync(req.body.password, user.password)
     if(!isCorrectPass) return next(createError(404, 'password incorrect'))
 
-    const accessToken= generateAccessToken(user);
-    // const refreshToken = generateRefreshToken(user)
+    const accessToken = generateToken(user);
 
+    if(!accessToken) return res.status(401).send('login failed')
+   // const refreshToken = randtoken.generate(jwtVariable.refreshTokenSize)
+    const refreshToken = randToken.generate(16)
+    if(!user.refreshToken) {
+      await updateRefreshToken(user._id, refreshToken)
+    }
     const { password, ...info } = user._doc
     res
       .cookie('accessToken', accessToken, {

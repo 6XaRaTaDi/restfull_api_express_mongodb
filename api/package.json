@@ -21,6 +21,7 @@
     "mongoose": "^6.9.2",
     "mongoose-seed": "^0.6.0",
     "nodemon": "^2.0.20",
+    "rand-token": "^1.0.1",
     "stripe": "^11.11.0"
   }
 }

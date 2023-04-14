@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 const { Schema } = mongoose;
 
 const userSchema = new Schema({
-  userName: {
+  username: {
     type: String,
     required: true,
     unique: true,
@@ -22,7 +22,7 @@ const userSchema = new Schema({
   },
   country: {
     type: String,
-    required: true,
+    required: false,
   },
   phone: {
     type: String,
@@ -36,6 +36,11 @@ const userSchema = new Schema({
     type: Boolean,
     default:false
   },
+  refreshToken: {
+    type: String,
+    required: false,
+    default: null,
+  }
 },{
   timestamps:true
 });
